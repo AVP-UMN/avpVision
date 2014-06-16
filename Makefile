@@ -1,28 +1,29 @@
 PROJECT = avpVision
 CC = g++
 
-COMPILE_OPTIONS = -std=c++11 -Wall
+CFLAGS = -std=c++11 -Wall
 
-#Include directories
-INCLUDE =-I/usr/local/include/opencv -I/usr/local/include
-#Libraries for linking
-LIBS =-L/usr/local/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann
+INCLUDES =-I/usr/local/include/opencv -I/usr/local/include
 
-SOURCE=main.cpp
+LFLAGS = -L/usr/local/lib 
 
-OBJECTS=$(patsubst %.c,%.o, $(SOURCE))
+LIBS =-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann
+
+SRCS =main.cpp
+
+OBJECTS=$(SRCS:.cpp=.o)
 
 CALIBRATION=calibrateCam
 
 all:$(PROJECT) $(CALIBRATION)
 
 $(CALIBRATION): camera_calibration.cpp
-	$(CC) $(COMPILE_OPTIONS) camera_calibration.cpp $(LIBS) $(INCLUDE) -o $@
+	$(CC) $(CFLAGS) camera_calibration.cpp $(LFLAGS) $(LIBS) $(INCLUDES) -o $@
 
-$(PROJECT):$(OBJECTS) 
-	$(CC) $(OBJECTS) $(LIBS) -o $@
+$(PROJECT): $(OBJECTS) 
+	$(CC) $(LFLAGS) $(LIBS) -o $@ $<
 %.o: %.cpp
-	$(CC) -c $(COMPILE_OPTIONS) $(INCLUDE) $(LIBS) -o $@ $<
+	$(CC) -c $(CFLAGS) $(INCLUDES) $(LFLAGS) $(LIBS) -o $@ $<
 
 run: $(PROJECT)
 	./$(PROJECT)
