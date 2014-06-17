@@ -371,6 +371,7 @@ int main(int argc, char* argv[])
             undistort(temp1, view1, cameraMatrix1, distCoeffs1);
             undistort(temp2, view2, cameraMatrix2, distCoeffs2);
             hconcat(view1,view2,view);
+            putText(view,"Undistorsed",textOrigin,1,1,GREEN);    
         }
 
         //------------------------------ Show image and check for input commands -------------------
@@ -532,8 +533,6 @@ static void saveCameraParams( Settings& s, Size& imageSize,
 
     fs << "calibration_Time" << buf;
 
-    if( !rvecs.empty() || !reprojErrs.empty() )
-        fs << "nrOfFrames" << (int)std::max(rvecs.size(), reprojErrs.size());
     fs << "image_Width" << imageSize.width;
     fs << "image_Height" << imageSize.height;
     fs << "board_Width" << s.boardSize.width;

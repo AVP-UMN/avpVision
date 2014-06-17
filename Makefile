@@ -21,9 +21,9 @@ $(CALIBRATION): camera_calibration.cpp
 	$(CC) $(CFLAGS) camera_calibration.cpp $(LFLAGS) $(LIBS) $(INCLUDES) -o $@
 
 $(PROJECT): $(OBJECTS) 
-	$(CC) $(LFLAGS) $(LIBS) -o $@ $<
+	$(CC) $(CFLAGS) $< $(LFLAGS) $(LIBS) -o $@ 
 %.o: %.cpp
-	$(CC) -c $(CFLAGS) $(INCLUDES) $(LFLAGS) $(LIBS) -o $@ $<
+	$(CC) -c $(CFLAGS) $(INCLUDES) -o $@ $<
 
 run: $(PROJECT)
 	./$(PROJECT)
