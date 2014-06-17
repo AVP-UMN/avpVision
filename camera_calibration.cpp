@@ -519,7 +519,8 @@ static bool runCalibration( Settings& s, Size& imageSize,
 */
 static void saveCameraParams( Settings& s, Size& imageSize,
                               Mat& cameraMatrix1, Mat& distCoeffs1, const vector<vector<Point2f> >& imagePoints1,
-                              Mat& cameraMatrix2, Mat& distCoeffs2, const vector<vector<Point2f> >& imagePoints2)
+                              Mat& cameraMatrix2, Mat& distCoeffs2, const vector<vector<Point2f> >& imagePoints2,
+								Mat& R,Mat& T,Mat& E,Mat& F)
 {
     FileStorage fs( s.outputFileName, FileStorage::WRITE );
 
@@ -528,7 +529,7 @@ static void saveCameraParams( Settings& s, Size& imageSize,
     struct tm *t2 = localtime( &tm );
     char buf[1024];
     strftime( buf, sizeof(buf)-1, "%c", t2 );
-/*
+
     fs << "calibration_Time" << buf;
 
     if( !rvecs.empty() || !reprojErrs.empty() )
@@ -555,9 +556,17 @@ static void saveCameraParams( Settings& s, Size& imageSize,
 
     fs << "flagValue" << s.flag;
 
-    fs << "Camera_Matrix" << cameraMatrix;
-    fs << "Distortion_Coefficients" << distCoeffs;
+    fs << "Camera_Matrix_1" << cameraMatrix1;
+    fs << "Distortion_Coefficients_1" << distCoeffs1;
+	fs << "Camera_Matrix_2" << cameraMatrix2;
+    fs << "Distortion_Coefficients_2" << distCoeffs2;
 
+	fs << "R" << R;
+	fs << "T" << T;
+	fs << "E" << E;
+	fs << "F" << F;
+
+/*
     fs << "Avg_Reprojection_Error" << totalAvgErr;
     if( !reprojErrs.empty() )
         fs << "Per_View_Reprojection_Errors" << Mat(reprojErrs);
@@ -605,6 +614,7 @@ bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix1, Mat
 */
     if( ok )
         saveCameraParams( s, imageSize, cameraMatrix1, distCoeffs1, imagePoints1,
-                                        cameraMatrix2, distCoeffs2, imagePoints2);
+                                        cameraMatrix2, distCoeffs2, imagePoints2,
+										R,T,E,F);
     return ok;
 }
