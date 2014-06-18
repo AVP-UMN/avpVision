@@ -7,8 +7,28 @@
 using namespace cv;
 using namespace std;
 
+
+
 int main(int argc, char* argv[])
 {
+
+    //read xml file
+    FileStorage fs("data/sterer_calibration_data.xml");
+    if(!fs.isOpened()){
+        cout<<"can't find stereo calibration file"<<endl;
+        return -1;
+    }
+    Mat cameraMatrix1,distCoeffs1,
+        cameraMatrix2,distCoeffs2,R,T,E,F;
+    fs["Camera_Matrix_1"]>>cameraMatrix1;
+    fs["Distortion_Coefficients_1"]>>distCoeffs1;
+    fs["Camera_Matrix_2"]>>cameraMatrix2;
+    fs["Distortion_Coefficients_2"]>>distCoeffs2;
+    fs["R"]>>R;
+    fs["T"]>>T;
+    fs["E"]>>E;
+    fs["F"]>>F;
+
     VideoCapture cap1(0);
     VideoCapture cap2(1);
     if ( !cap1.isOpened() )
@@ -59,7 +79,7 @@ int main(int argc, char* argv[])
         char key=waitKey(10);
         switch(key){
             case 27: //esc
-                cout<<"esc pressed, exit"<<endl;    
+                cout<<"esc pressed, exit"<<endl;
                 return 0;
             break;
             case ' ':
@@ -69,7 +89,7 @@ int main(int argc, char* argv[])
                 imwrite(string("./images/cam1_")+currentTime+".jpg",frame1);
                 imwrite(string("./images/cam2_")+currentTime+".jpg",frame2);
             break;
-        
+
         }
     }
 

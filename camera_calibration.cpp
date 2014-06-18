@@ -286,8 +286,8 @@ int main(int argc, char* argv[])
 
         imageSize = view1.size();  // Format input image.
         if( s.flipVertical ){
-             flip( view1, view1, 0 ); 
-             flip( view2, view2, 0 );    
+             flip( view1, view1, 0 );
+             flip( view2, view2, 0 );
         }
 
         vector<Point2f> pointBuf1,pointBuf2;
@@ -371,7 +371,7 @@ int main(int argc, char* argv[])
             undistort(temp1, view1, cameraMatrix1, distCoeffs1);
             undistort(temp2, view2, cameraMatrix2, distCoeffs2);
             hconcat(view1,view2,view);
-            putText(view,"Undistorsed",textOrigin,1,1,GREEN);    
+            putText(view,"Undistorsed",textOrigin,1,1,GREEN);
         }
 
         //------------------------------ Show image and check for input commands -------------------
@@ -475,7 +475,7 @@ static void calcBoardCornerPositions(Size boardSize, float squareSize, vector<Po
     }
 }
 
-static bool runCalibration( Settings& s, Size& imageSize, 
+static bool runCalibration( Settings& s, Size& imageSize,
                             Mat& cameraMatrix1, Mat& distCoeffs1, vector<vector<Point2f> > imagePoints1,
                             Mat& cameraMatrix2, Mat& distCoeffs2, vector<vector<Point2f> > imagePoints2,
                             Mat& R, Mat& T, Mat& E, Mat& F
