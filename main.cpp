@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 {
     bool recordMode=false;
     //read xml file
-    FileStorage fs("data/sterer_calibration_data.xml",FileStorage::READ);
+    FileStorage fs("data/stereo_calibration_data.xml",FileStorage::READ);
     if(!fs.isOpened()){
         cout<<"can't find stereo calibration file"<<endl;
         return -1;
@@ -114,6 +114,8 @@ int main(int argc, char* argv[])
             Mat g1,g2,depthMap,depthMapNormalized;
             cvtColor(rframe1, g1, CV_BGR2GRAY);
             cvtColor(rframe2, g2, CV_BGR2GRAY);
+//            cvtColor(frame1, g1, CV_BGR2GRAY);
+//            cvtColor(frame2, g2, CV_BGR2GRAY);
             sgbm(g1, g2, depthMap);
             normalize(depthMap, depthMapNormalized, 0, 255, CV_MINMAX, CV_8U);
             imshow("depth map",depthMapNormalized);
