@@ -44,6 +44,15 @@ int main(int argc, char* argv[])
     }
 
 
+    Mat mapOne1, mapOne2, mapTwo1, mapTwo2;
+    initUndistortRectifyMap(cameraMatrix1, distCoeffs1, Mat(),
+        getOptimalNewCameraMatrix(cameraMatrix1, distCoeffs1, imageSize, 1, imageSize, 0),
+        imageSize, CV_16SC2, mapOne1, mapOne2);
+    initUndistortRectifyMap(cameraMatrix2, distCoeffs2, Mat(),
+        getOptimalNewCameraMatrix(cameraMatrix2, distCoeffs2, imageSize, 1, imageSize, 0),
+        imageSize, CV_16SC2, mapTwo1, mapTwo2);
+
+
     cap1.set(CV_CAP_PROP_FRAME_WIDTH,640);
     cap1.set(CV_CAP_PROP_FRAME_HEIGHT,480);
     cap1.set(CV_CAP_PROP_FPS,60);
@@ -64,6 +73,7 @@ int main(int argc, char* argv[])
     moveWindow("cam1",320,0);
     moveWindow("cam2",640,0);
     moveWindow("stereo",960,0);
+    moveWindow("rectify",960,0);
     while(1)
     {
         Mat frame1,frame2;
@@ -75,7 +85,12 @@ int main(int argc, char* argv[])
         hconcat(frame1,frame2,stereoFrame);
         //imshow("cam1", frame1);
         //imshow("cam2", frame2);
+        Mat rframe1,rframe2,rstereoFrame;
+        remap(frame1, rframe1, mapOne1, mapOne2, INTER_LINEAR);
+        remap(frame2, rframe2, mapTwo1, mapTwo2, INTER_LINEAR);
+        hconcat(rframe1,rframe2,rstereoFrame);
         imshow("stereo", stereoFrame);
+        imshow("rectify", rstereoFrame);
         char key=waitKey(10);
         switch(key){
             case 27: //esc
