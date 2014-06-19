@@ -237,7 +237,7 @@ bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix1, Mat
 int main(int argc, char* argv[])
 {
     Settings s;
-    const string inputSettingsFile = argc > 1 ? argv[1] : "default.xml";
+    const string inputSettingsFile = argc > 1 ? argv[1] : "data/stereo_calibration.xml";
     FileStorage fs(inputSettingsFile, FileStorage::READ); // Read the settings
     if (!fs.isOpened())
     {
@@ -345,7 +345,7 @@ int main(int argc, char* argv[])
         hconcat(view1,view2,view);
         //----------------------------- Output Text ------------------------------------------------
         string msg = (mode == CAPTURING) ? "100/100,100/100" :
-                      mode == CALIBRATED ? "Calibrated" : "Press 'g' to start";
+                      mode == CALIBRATED ? "UnCalibrated" : "Press 'g' to start";
         int baseLine = 0;
         Size textSize = getTextSize(msg, 1, 1, 1, &baseLine);
         Point textOrigin(view.cols - 2*textSize.width - 10, view.rows - 2*baseLine - 10);
@@ -371,7 +371,7 @@ int main(int argc, char* argv[])
             undistort(temp1, view1, cameraMatrix1, distCoeffs1);
             undistort(temp2, view2, cameraMatrix2, distCoeffs2);
             hconcat(view1,view2,view);
-            putText(view,"Undistorsed",textOrigin,1,1,GREEN);
+            putText(view,"Calibrated",textOrigin,1,1,GREEN);
         }
 
         //------------------------------ Show image and check for input commands -------------------
@@ -532,7 +532,8 @@ static void saveCameraParams( Settings& s, Size& imageSize,
     strftime( buf, sizeof(buf)-1, "%c", t2 );
 
     fs << "calibration_Time" << buf;
-
+    fs << "Input1" << s.input1;
+    fs << "Input2" << s.input2;
     fs << "image_Width" << imageSize.width;
     fs << "image_Height" << imageSize.height;
     fs << "board_Width" << s.boardSize.width;

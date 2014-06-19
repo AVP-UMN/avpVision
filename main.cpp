@@ -7,31 +7,39 @@
 using namespace cv;
 using namespace std;
 
-#define CAMERA_WIDTH    640
-#define CAMERA_HEIGHT   480
 
 int main(int argc, char* argv[])
 {
-    bool recordMode=false;
+    bool recordMode=false,stopRecording=false,recordingStarted=false;
+    int image_width,image_height,fps,rectify;
+    string input1,input2;
+    VideoWriter* videoRecorder=NULL;
     //read xml file
-    FileStorage fs("data/stereo_calibration_data.xml",FileStorage::READ);
-    if(!fs.isOpened()){
+    FileStorage fsCalibration("data/stereo_calibration_data.xml",FileStorage::READ);
+    if(!fsCalibration.isOpened()){
         cout<<"can't find stereo calibration file"<<endl;
         return -1;
     }
     Mat cameraMatrix1,distCoeffs1,
         cameraMatrix2,distCoeffs2,R,T,E,F;
-    fs["Camera_Matrix_1"]>>cameraMatrix1;
-    fs["Distortion_Coefficients_1"]>>distCoeffs1;
-    fs["Camera_Matrix_2"]>>cameraMatrix2;
-    fs["Distortion_Coefficients_2"]>>distCoeffs2;
-    fs["R"]>>R;
-    fs["T"]>>T;
-    fs["E"]>>E;
-    fs["F"]>>F;
+    fsCalibration["Camera_Matrix_1"]>>cameraMatrix1;
+    fsCalibration["Distortion_Coefficients_1"]>>distCoeffs1;
+    fsCalibration["Camera_Matrix_2"]>>cameraMatrix2;
+    fsCalibration["Distortion_Coefficients_2"]>>distCoeffs2;
+    fsCalibration["R"]>>R;
+    fsCalibration["T"]>>T;
+    fsCalibration["E"]>>E;
+    fsCalibration["F"]>>F;
+    FileStorage fsConfig("data/vision_config.xml",FileStorage::READ);
+    fsConfig["image_Width"]>>image_width;
+    fsConfig["image_Height"]>>image_height;
+    fsConfig["Input1"]>>input1;
+    fsConfig["Input2"]>>input2;
+    fsConfig["fps"]>>fps;
+    fsConfig["rectify"]>>rectify;
 
-    VideoCapture cap1(0);
-    VideoCapture cap2(1);
+    VideoCapture cap1(stoi(input1));
+    VideoCapture cap2(stoi(input2));
     if ( !cap1.isOpened() )
     {
          cout << "Cannot open camera 1" << endl;
@@ -46,7 +54,7 @@ int main(int argc, char* argv[])
 
 
     Mat mapOne1, mapOne2, mapTwo1, mapTwo2;
-    Size imageSize=Size(CAMERA_WIDTH,CAMERA_HEIGHT);
+    Size imageSize=Size(image_width,image_height);
     initUndistortRectifyMap(cameraMatrix1, distCoeffs1, Mat(),
         getOptimalNewCameraMatrix(cameraMatrix1, distCoeffs1, imageSize, 1, imageSize, 0),
         imageSize, CV_16SC2, mapOne1, mapOne2);
@@ -65,29 +73,22 @@ int main(int argc, char* argv[])
     sgbm.disp12MaxDiff = 10;
     sgbm.fullDP = false;
     sgbm.P1 = 600;
-    sgbm.P2 = 2400;
+    sgbm.P2 = 240;
 
-    cap1.set(CV_CAP_PROP_FRAME_WIDTH,CAMERA_WIDTH);
-    cap1.set(CV_CAP_PROP_FRAME_HEIGHT,CAMERA_HEIGHT);
-    cap1.set(CV_CAP_PROP_FPS,60);
-    cap2.set(CV_CAP_PROP_FRAME_WIDTH,CAMERA_WIDTH);
-    cap2.set(CV_CAP_PROP_FRAME_HEIGHT,CAMERA_HEIGHT);
-    cap2.set(CV_CAP_PROP_FPS,60);
-/*
-    cap1.set(CV_CAP_PROP_FRAME_WIDTH,320);
-    cap1.set(CV_CAP_PROP_FRAME_HEIGHT,240);
-    cap1.set(CV_CAP_PROP_FPS,60);
-    cap2.set(CV_CAP_PROP_FRAME_WIDTH,320);
-    cap2.set(CV_CAP_PROP_FRAME_HEIGHT,240);
-    cap2.set(CV_CAP_PROP_FPS,60);
-*/
+    cap1.set(CV_CAP_PROP_FRAME_WIDTH,image_width);
+    cap1.set(CV_CAP_PROP_FRAME_HEIGHT,image_height);
+    cap1.set(CV_CAP_PROP_FPS,fps);
+    cap2.set(CV_CAP_PROP_FRAME_WIDTH,image_width);
+    cap2.set(CV_CAP_PROP_FRAME_HEIGHT,image_height);
+    cap2.set(CV_CAP_PROP_FPS,fps);
 
-    namedWindow("cam1",CV_WINDOW_AUTOSIZE);
-    namedWindow("cam2",CV_WINDOW_AUTOSIZE);
-    moveWindow("cam1",320,0);
-    moveWindow("cam2",640,0);
+    namedWindow("stereo",CV_WINDOW_AUTOSIZE);
     moveWindow("stereo",960,0);
-    moveWindow("rectify",960,0);
+    if(rectify){
+        namedWindow("rectify",CV_WINDOW_AUTOSIZE);
+        moveWindow("rectify",960,0);
+    }
+    namedWindow("depth map",CV_WINDOW_AUTOSIZE);
     moveWindow("depth map",960,0);
     while(1)
     {
@@ -102,24 +103,49 @@ int main(int argc, char* argv[])
         //imshow("cam2", frame2);
         imshow("stereo", stereoFrame);
 
+
+        Mat g1,g2,depthMap,depthMapNormalized;
         if(recordMode){
+            if(!recordingStarted){
+                if(!videoRecorder){
+                    time_t ct=time(NULL);
+                    char* currentTime=ctime(&ct);
+                    videoRecorder=new VideoWriter (string("data/videos/")+currentTime+".avi",
+                     CV_FOURCC('D','I','V','X'), fps, Size(image_width*2,image_height), true);
+                     cout<<"started recording"<<endl;
+                }
+                recordingStarted=true;
+            }else if(stopRecording){
+                delete videoRecorder;
+                cout<<"stopped recording"<<endl;
+                videoRecorder=NULL;
+                recordMode=false;
+
+            }else{
+                videoRecorder->write(stereoFrame);
+            }
 
         }else{
-            Mat rframe1,rframe2,rstereoFrame;
-            remap(frame1, rframe1, mapOne1, mapOne2, INTER_LINEAR);
-            remap(frame2, rframe2, mapTwo1, mapTwo2, INTER_LINEAR);
-            hconcat(rframe1,rframe2,rstereoFrame);
-            imshow("rectify", rstereoFrame);
+                if(rectify){
+                    Mat rframe1,rframe2,rstereoFrame;
+                    remap(frame1, rframe1, mapOne1, mapOne2, INTER_LINEAR);
+                    remap(frame2, rframe2, mapTwo1, mapTwo2, INTER_LINEAR);
+                    hconcat(rframe1,rframe2,rstereoFrame);
+                    imshow("rectify", rstereoFrame);
 
-            Mat g1,g2,depthMap,depthMapNormalized;
-            cvtColor(rframe1, g1, CV_BGR2GRAY);
-            cvtColor(rframe2, g2, CV_BGR2GRAY);
-//            cvtColor(frame1, g1, CV_BGR2GRAY);
-//            cvtColor(frame2, g2, CV_BGR2GRAY);
-            sgbm(g1, g2, depthMap);
-            normalize(depthMap, depthMapNormalized, 0, 255, CV_MINMAX, CV_8U);
-            imshow("depth map",depthMapNormalized);
+                    cvtColor(rframe1, g1, CV_BGR2GRAY);
+                    cvtColor(rframe2, g2, CV_BGR2GRAY);
+        //            cvtColor(frame1, g1, CV_BGR2GRAY);
+        //            cvtColor(frame2, g2, CV_BGR2GRAY);
+                }else{
+                    cvtColor(frame1, g1, CV_BGR2GRAY);
+                    cvtColor(frame2, g2, CV_BGR2GRAY);
+                }
+                sgbm(g1, g2, depthMap);
+                normalize(depthMap, depthMapNormalized, 0, 255, CV_MINMAX, CV_8U);
+                imshow("depth map",depthMapNormalized);
         }
+
         char key=waitKey(10);
         switch(key){
             case 27: //esc
@@ -135,7 +161,12 @@ int main(int argc, char* argv[])
             }
             break;
             case 'r':
-                {recordMode=!recordMode;}
+                 recordMode=true;
+                 stopRecording=false;
+                 recordingStarted=false;
+            break;
+            case 's':
+                stopRecording=true;
             break;
 
         }
