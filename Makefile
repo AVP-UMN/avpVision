@@ -15,10 +15,15 @@ OBJECTS=$(SRCS:.cpp=.o)
 
 CALIBRATION=calibrateCam
 
-all:$(PROJECT) $(CALIBRATION)
+VISION=vision
+
+all:$(PROJECT) $(CALIBRATION) $(VISION)
 
 $(CALIBRATION): camera_calibration.cpp
 	$(CC) $(CFLAGS) camera_calibration.cpp $(LFLAGS) $(LIBS) $(INCLUDES) -o $@
+
+$(VISION): vision.cpp
+	$(CC) $(CFLAGS) vision.cpp $(LFLAGS) $(LIBS) $(INCLUDES) -o $@
 
 $(PROJECT): $(OBJECTS) 
 	$(CC) $(CFLAGS) $< $(LFLAGS) $(LIBS) -o $@ 

@@ -114,8 +114,15 @@ public:
                 inputCapture1.open(input1);
                 inputCapture2.open(input2);
             }
-            if (inputType != IMAGE_LIST && !inputCapture1.isOpened() && !inputCapture2.isOpened())
+            if (inputType != IMAGE_LIST && !inputCapture1.isOpened()){
                     inputType = INVALID;
+                    cout<<"camera 1 can not be opened"<<endl;
+            }
+            if( inputType != IMAGE_LIST && !inputCapture2.isOpened()){
+                    inputType = INVALID;
+                    cout<<"camera 2 can not be opened"<<endl;
+
+            }
         }
         if (inputType == INVALID)
         {

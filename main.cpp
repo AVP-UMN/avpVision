@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
     fsConfig["Input2"]>>input2;
     fsConfig["fps"]>>fps;
     fsConfig["rectify"]>>rectify;
+    
 
     VideoCapture cap1(stoi(input1));
     VideoCapture cap2(stoi(input2));
